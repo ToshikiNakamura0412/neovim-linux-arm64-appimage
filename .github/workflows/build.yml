@@ -20,6 +20,7 @@ jobs:
           image: ubuntu:20.04
           options: -v ${{ github.workspace }}:/work -e DEBIAN_FRONTEND=noninteractive
           run: |
+            # Install dependencies
             apt-get update && apt-get install -y --no-install-recommends \
               git \
               curl \
@@ -30,15 +31,26 @@ jobs:
               build-essential \
               ca-certificates
 
+            # Build Neovim
             git clone -b stable --single-branch --depth 1 https://github.com/neovim/neovim.git
-            sed -i 's|cmake --install build --prefix=.*|cd build\nmake install DESTDIR="$APP_BUILD_DIR/${APP_DIR}"\ncd ..|' neovim/scripts/genappimage.sh
-            sed -i 's|\.\/linuxdeploy-"$ARCH_ORIGINAL"\.AppImage |./linuxdeploy-"$ARCH_ORIGINAL".AppImage --appimage-extract-and-run |' neovim/scripts/genappimage.sh
-            cd neovim && make CMAKE_BUILD_TYPE=RelWithDebInfo appimage
+            cd neovim
+            make CMAKE_BUILD_TYPE=RelWithDebInfo \
+                 CMAKE_EXTRA_FLAGS="-DCMAKE_INSTALL_PREFIX=$PWD/build/nvim.AppDir/usr"
+            make install
+
+            # Create appimage
+            curl -LO https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-aarch64.AppImage
+            chmod +x linuxdeploy-aarch64.AppImage
+            ./linuxdeploy-aarch64.AppImage --appimage-extract-and-run \
+              --appdir build/nvim.AppDir \
+              -d runtime/nvim.desktop \
+              -i runtime/nvim.png \
+              --output appimage
 
       - name: Upload AppImage artifact
         uses: actions/upload-artifact@v4
         with:
           name: appimage
-          path: neovim/build/bin/nvim-linux-*.appimage
+          path: neovim/nvim-linux-*.appimage
           retention-days: 1
 
