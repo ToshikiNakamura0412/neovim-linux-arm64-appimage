@@ -12,18 +12,20 @@ jobs:
   build:
     runs-on: ubuntu-24.04-arm
     env:
-      NEOVIM_REPO: https://github.com/neovim/neovim.git
       NEOVIM_BRANCH: stable
-      APPIMAGE_NAME: nvim-linux-arm64.appimage
+      NEOVIM_IMAGE: nvim-linux-arm64.appimage
     steps:
       - name: Build in Ubuntu 20.04 container
         uses: addnab/docker-run-action@v3
         with:
           image: ubuntu:20.04
+          options: -v ${{ github.workspace }}:/github_workspace -e DEBIAN_FRONTEND=noninteractive -e NEOVIM_IMAGE=${{ env.NEOVIM_IMAGE }}
           run: |
-            export DEBIAN_FRONTEND=noninteractive
+            # Install dependencies
             apt-get update && apt-get install -y --no-install-recommends \
               git \
+              curl \
+              file \
               unzip \
               gettext \
               cmake \
@@ -31,13 +33,30 @@ jobs:
               build-essential \
               ca-certificates
 
-            git clone -b ${NEOVIM_BRANCH} --single-branch --depth 1 https://github.com/neovim/neovim.git
-            cd neovim && make CMAKE_BUILD_TYPE=RelWithDebInfo appimage
+            # Build Neovim
+            git clone -b stable --single-branch --depth 1 https://github.com/neovim/neovim.git
+            cd neovim
+            make CMAKE_BUILD_TYPE=RelWithDebInfo \
+                 CMAKE_EXTRA_FLAGS="-DCMAKE_INSTALL_PREFIX=$PWD/build/nvim.AppDir/usr"
+            make install
+
+            # Create appimage
+            curl -LO https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-aarch64.AppImage
+            chmod +x linuxdeploy-aarch64.AppImage
+            export OUTPUT=${NEOVIM_IMAGE}
+            ./linuxdeploy-aarch64.AppImage --appimage-extract-and-run \
+              --appdir build/nvim.AppDir \
+              -d runtime/nvim.desktop \
+              -i runtime/nvim.png \
+              --output appimage
+
+            # Move the AppImage to the mounted workspace
+            mv ${NEOVIM_IMAGE} /github_workspace/
 
       - name: Upload AppImage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${APPIMAGE_NAME}
-          path: neovim/build/bin/${APPIMAGE_NAME}
+          name: appimage
+          path: ${{ env.NEOVIM_IMAGE }}
           retention-days: 1
 
