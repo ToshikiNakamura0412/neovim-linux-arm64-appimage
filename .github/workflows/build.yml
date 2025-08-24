@@ -1,0 +1,43 @@
+name: Build Neovim AppImage (arm64 Ubuntu20.04)
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'stable'
+  schedule: # monthly
+    - cron: '0 0 1 * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    env:
+      NEOVIM_REPO: https://github.com/neovim/neovim.git
+      NEOVIM_BRANCH: stable
+      APPIMAGE_NAME: nvim-linux-arm64.appimage
+    steps:
+      - name: Build in Ubuntu 20.04 container
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ubuntu:20.04
+          run: |
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update && apt-get install -y --no-install-recommends \
+              git \
+              unzip \
+              gettext \
+              cmake \
+              ninja-build \
+              build-essential \
+              ca-certificates
+
+            git clone -b ${NEOVIM_BRANCH} --single-branch --depth 1 https://github.com/neovim/neovim.git
+            cd neovim && make CMAKE_BUILD_TYPE=RelWithDebInfo appimage
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${APPIMAGE_NAME}
+          path: neovim/build/bin/${APPIMAGE_NAME}
+          retention-days: 1
+
