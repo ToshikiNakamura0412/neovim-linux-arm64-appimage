@@ -18,7 +18,7 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: ubuntu:20.04
-          options: -e DEBIAN_FRONTEND=noninteractive -v "${{ github.workspace }}:/workspace"
+          options: -v "${{ github.workspace }}:/work" -e DEBIAN_FRONTEND=noninteractive
           run: |
             apt-get update && apt-get install -y --no-install-recommends \
               git \
@@ -31,12 +31,11 @@ jobs:
 
             git clone -b stable --single-branch --depth 1 https://github.com/neovim/neovim.git
             cd neovim && make CMAKE_BUILD_TYPE=RelWithDebInfo appimage
-            mv build/bin/nvim-linux-*.appimage /workspace/nvim-linux-*.appimage
 
       - name: Upload AppImage artifact
         uses: actions/upload-artifact@v4
         with:
           name: appimage
-          path: nvim-linux-*.appimage
+          path: neovim/build/bin/nvim-linux-*.appimage
           retention-days: 1
 
