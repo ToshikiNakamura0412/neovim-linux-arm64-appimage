@@ -18,9 +18,7 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: ubuntu:20.04
-          options: |
-            -e DEBIAN_FRONTEND=noninteractive \
-            -v "${{ github.workspace }}:/workspace"
+          options: -e DEBIAN_FRONTEND=noninteractive -v "${{ github.workspace }}:/workspace"
           run: |
             apt-get update && apt-get install -y --no-install-recommends \
               git \
