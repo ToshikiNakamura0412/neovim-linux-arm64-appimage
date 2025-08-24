@@ -12,16 +12,17 @@ jobs:
   build:
     runs-on: ubuntu-24.04-arm
     env:
-      NEOVIM_REPO: https://github.com/neovim/neovim.git
       NEOVIM_BRANCH: stable
-      APPIMAGE_NAME: nvim-linux-arm64.appimage
     steps:
       - name: Build in Ubuntu 20.04 container
         uses: addnab/docker-run-action@v3
         with:
           image: ubuntu:20.04
+          options: |
+            -e DEBIAN_FRONTEND=noninteractive \
+            -e NEOVIM_REPO=${{ env.NEOVIM_REPO }} \
+            -e NEOVIM_BRANCH=${{ env.NEOVIM_BRANCH }}
           run: |
-            export DEBIAN_FRONTEND=noninteractive
             apt-get update && apt-get install -y --no-install-recommends \
               git \
               unzip \
