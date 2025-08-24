@@ -34,10 +34,8 @@ jobs:
               ca-certificates
 
             # Build Neovim
-            ls -l
             git clone -b stable --single-branch --depth 1 https://github.com/neovim/neovim.git
             cd neovim
-            export OUTPUT=${NEOVIM_IMAGE}
             make CMAKE_BUILD_TYPE=RelWithDebInfo \
                  CMAKE_EXTRA_FLAGS="-DCMAKE_INSTALL_PREFIX=$PWD/build/nvim.AppDir/usr"
             make install
@@ -45,6 +43,7 @@ jobs:
             # Create appimage
             curl -LO https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-aarch64.AppImage
             chmod +x linuxdeploy-aarch64.AppImage
+            export OUTPUT=${NEOVIM_IMAGE}
             ./linuxdeploy-aarch64.AppImage --appimage-extract-and-run \
               --appdir build/nvim.AppDir \
               -d runtime/nvim.desktop \
@@ -52,16 +51,12 @@ jobs:
               --output appimage
 
             # Move the AppImage to the mounted workspace
-            ls -l
             mv ${NEOVIM_IMAGE} /github_workspace/
-
-      - name: List AppImage details
-        run: ls -lh
 
       - name: Upload AppImage artifact
         uses: actions/upload-artifact@v4
         with:
           name: appimage
-          path: ${NEOVIM_IMAGE}
+          path: ${{ env.NEOVIM_IMAGE }}
           retention-days: 1
 
