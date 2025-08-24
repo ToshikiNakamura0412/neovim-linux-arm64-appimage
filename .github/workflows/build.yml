@@ -35,7 +35,7 @@ jobs:
       - name: Upload AppImage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${APPIMAGE_NAME}
-          path: neovim/build/bin/${APPIMAGE_NAME}
+          name: appimage
+          path: neovim/build/bin/nvim-linux-"$(arch)".appimage
           retention-days: 1
 
