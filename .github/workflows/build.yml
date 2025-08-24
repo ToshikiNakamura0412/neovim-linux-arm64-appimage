@@ -18,9 +18,7 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: ubuntu:20.04
-          options: |
-            -e DEBIAN_FRONTEND=noninteractive \
-            -e NEOVIM_BRANCH=${{ env.NEOVIM_BRANCH }}
+          options: -e DEBIAN_FRONTEND=noninteractive
           run: |
             apt-get update && apt-get install -y --no-install-recommends \
               git \
@@ -31,7 +29,7 @@ jobs:
               build-essential \
               ca-certificates
 
-            git clone -b ${NEOVIM_BRANCH} --single-branch --depth 1 https://github.com/neovim/neovim.git
+            git clone -b stable --single-branch --depth 1 https://github.com/neovim/neovim.git
             cd neovim && make CMAKE_BUILD_TYPE=RelWithDebInfo appimage
 
       - name: Upload AppImage artifact
