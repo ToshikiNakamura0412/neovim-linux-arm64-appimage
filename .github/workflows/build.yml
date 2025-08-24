@@ -20,7 +20,6 @@ jobs:
           image: ubuntu:20.04
           options: |
             -e DEBIAN_FRONTEND=noninteractive \
-            -e NEOVIM_REPO=${{ env.NEOVIM_REPO }} \
             -e NEOVIM_BRANCH=${{ env.NEOVIM_BRANCH }}
           run: |
             apt-get update && apt-get install -y --no-install-recommends \
