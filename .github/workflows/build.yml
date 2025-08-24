@@ -32,6 +32,7 @@ jobs:
 
             git clone -b stable --single-branch --depth 1 https://github.com/neovim/neovim.git
             sed -i 's|cmake --install build --prefix=.*|cd build\nmake install DESTDIR="$APP_BUILD_DIR/${APP_DIR}"\ncd ..|' neovim/scripts/genappimage.sh
+            sed -i 's|\.\/linuxdeploy-"$ARCH_ORIGINAL"\.AppImage |./linuxdeploy-"$ARCH_ORIGINAL".AppImage --appimage-extract-and-run |' neovim/scripts/genappimage.sh
             cd neovim && make CMAKE_BUILD_TYPE=RelWithDebInfo appimage
 
       - name: Upload AppImage artifact
