@@ -2,9 +2,6 @@ name: Build Neovim AppImage (arm64 Ubuntu20.04)
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - 'stable'
   schedule: # monthly
     - cron: '0 0 1 * *'
 
@@ -19,7 +16,11 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: ubuntu:20.04
-          options: -v ${{ github.workspace }}:/github_workspace -e DEBIAN_FRONTEND=noninteractive -e NEOVIM_IMAGE=${{ env.NEOVIM_IMAGE }}
+          options: |
+            -v ${{ github.workspace }}:/github_workspace
+            -e DEBIAN_FRONTEND=noninteractive
+            -e NEOVIM_BRANCH=${{ env.NEOVIM_BRANCH }}
+            -e NEOVIM_IMAGE=${{ env.NEOVIM_IMAGE }}
           run: |
             # Install dependencies
             apt-get update && apt-get install -y --no-install-recommends \
@@ -34,7 +35,7 @@ jobs:
               ca-certificates
 
             # Build Neovim
-            git clone -b stable --single-branch --depth 1 https://github.com/neovim/neovim.git
+            git clone -b ${NEOVIM_BRANCH} --single-branch --depth 1 https://github.com/neovim/neovim.git
             cd neovim
             make CMAKE_BUILD_TYPE=RelWithDebInfo \
                  CMAKE_EXTRA_FLAGS="-DCMAKE_INSTALL_PREFIX=$PWD/build/nvim.AppDir/usr"
@@ -60,3 +61,24 @@ jobs:
           path: ${{ env.NEOVIM_IMAGE }}
           retention-days: 1
 
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.NEOVIM_BRANCH }}
+          name: Nvim ${{ env.NEOVIM_BRANCH }} AppImage (arm64 Ubuntu20.04)
+          body: |
+            This is an automatically built AppImage of Neovim (${{ env.NEOVIM_BRANCH }}, arm64, Ubuntu20.04).
+            Download `${{ env.NEOVIM_IMAGE }}` and make it executable:
+
+            ```bash
+            chmod +x ${{ env.NEOVIM_IMAGE }}
+            ./${{ env.NEOVIM_IMAGE }}
+            ```
+
+            ---
+            **License**:
+            Distributed under the [Apache 2.0 license](https://github.com/neovim/neovim/blob/master/LICENSE.txt).
+            Neovim is developed by the [Neovim project](https://github.com/neovim/neovim.git).
+          files: ${{ env.NEOVIM_IMAGE }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
