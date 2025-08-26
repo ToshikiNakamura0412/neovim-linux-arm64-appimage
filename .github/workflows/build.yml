@@ -1,4 +1,4 @@
-name: Build Neovim AppImage (arm64 Ubuntu20.04)
+name: build
 
 on:
   workflow_dispatch:
